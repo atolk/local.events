@@ -1,0 +1,19 @@
+---
+description: Core AI workflow and validation gates
+alwaysApply: true
+---
+
+# AI Core Guardrails
+
+- Treat every AI change as production code: keep edits minimal, explicit, and reversible.
+- For behavior changes, add or update tests in the same iteration.
+- Before completing work, run this validation sequence:
+  1. `npm run lint`
+  2. `npm run test`
+  3. `npm run typecheck`
+  4. `npm run build`
+- Run `npm run format:check` when touching broader filesets or before release-hardening passes.
+- If a check fails, fix root cause first; do not bypass checks.
+- Avoid introducing dependencies unless they solve a concrete problem and are actually used.
+- Keep code comments sparse and only for non-obvious logic.
+- Prefer small commits/PRs with clear acceptance criteria and risk notes.

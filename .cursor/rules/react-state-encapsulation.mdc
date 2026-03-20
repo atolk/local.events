@@ -1,0 +1,10 @@
+---
+description: Keep store subscriptions as low as possible to minimize re-renders
+alwaysApply: true
+---
+
+# React State Encapsulation
+
+- Subscribe to stores (Zustand, etc.) in the leaf component that needs the data.
+- Avoid lifting store subscriptions to parent containers—this causes the entire subtree to re-render when the subscribed state changes.
+- When a component must be controlled (value/onChange props), consider a thin container that subscribes and passes props down, rather than subscribing in a higher-level parent.

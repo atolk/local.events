@@ -1,0 +1,10 @@
+---
+description: Use Effects only for external synchronization
+alwaysApply: true
+---
+
+# React Effect Discipline
+
+- Use `useEffect` only to synchronize with external systems (DOM, browser APIs, network, third-party libs, subscriptions).
+- If something can be derived from props/state, compute it during render instead of effect-synced state.
+- Use `useMemo` only when that render-time computation is measurably expensive.
