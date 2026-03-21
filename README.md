@@ -11,6 +11,40 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Docker
+
+Build the production image:
+
+```bash
+docker build -t event-aggregator:local .
+```
+
+Run it locally:
+
+```bash
+docker run --rm -p 3000:3000 --name event-aggregator event-aggregator:local
+```
+
+## Container Registry (GHCR)
+
+The repository publishes images to:
+
+- `ghcr.io/<owner>/<repo>`
+
+Tag behavior from CI:
+
+- Push to `main` -> `latest` and `sha-<commit>`
+- Push tag `vX.Y.Z` -> `vX.Y.Z`, `X.Y.Z`, `X.Y`, `X`, and `sha-<commit>`
+- Pull requests -> image build validation only (no push)
+
+Pull examples:
+
+```bash
+docker pull ghcr.io/<owner>/<repo>:latest
+docker pull ghcr.io/<owner>/<repo>:sha-<commit>
+docker pull ghcr.io/<owner>/<repo>:v1.2.3
+```
+
 ## Scripts
 
 | Command | Description |
