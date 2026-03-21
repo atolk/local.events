@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
-import { divIcon } from "leaflet";
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useAppStateStore } from "@/stores/app-state-store";
 import { useUserSettingsStore } from "@/stores/user-settings-store";
-import { CATEGORY_ICONS, CATEGORY_LABELS, CATEGORY_MARKER_COLORS } from "@/lib/utils/constants";
+import { CATEGORY_LABELS } from "@/lib/utils/constants";
 import { cn } from "@/lib/utils";
-import type { Event, EventCategory } from "@/lib/types";
+import type { Event } from "@/lib/types";
 import { FlyToTargetController } from "./fly-to-target-controller";
 import { ContextMenuController } from "./context-menu";
+import { createEventMarkerLeafletIcon } from "./marker-icon";
 import { UserLocationMarker } from "./user-location-marker";
 
 const DEFAULT_CENTER: [number, number] = [55.75251356119127, 37.61559963226319];
@@ -54,29 +53,6 @@ function stringHash(value: string) {
 function seededUnit(seed: number) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
-}
-
-function createCategoryIcon(category: EventCategory, selected = false) {
-  const IconComponent = CATEGORY_ICONS[category];
-  const color = CATEGORY_MARKER_COLORS[category];
-  const html = renderToStaticMarkup(
-    <div
-      className={cn(
-        "flex min-w-10 items-center justify-center rounded-full bg-white shadow-md transition-all",
-        selected ? "border-primary size-12 border-4" : "size-10 border-2 border-white"
-      )}
-      style={{ color }}
-    >
-      <IconComponent className={selected ? "size-6" : "size-5"} />
-    </div>
-  );
-  return divIcon({
-    html,
-    className: "!border-0 !bg-transparent",
-    iconSize: selected ? [48, 48] : [40, 40],
-    iconAnchor: selected ? [24, 48] : [20, 40],
-    popupAnchor: selected ? [0, -48] : [0, -40],
-  });
 }
 
 function MapCenterController({
@@ -260,7 +236,10 @@ export function EventMap({ events, className }: EventMapProps) {
           <Marker
             key={event.id}
             position={[event.lat, event.lng]}
-            icon={createCategoryIcon(event.category, selectedEventId === event.id)}
+            icon={createEventMarkerLeafletIcon({
+              category: event.category,
+              selected: selectedEventId === event.id,
+            })}
             eventHandlers={{
               click: () => setSelectedEventId(event.id, "EventMap:markerClick"),
             }}
