@@ -1,0 +1,12 @@
+.menu {
+  position: absolute;
+  z-index: 1000;
+  min-width: 10rem;
+  padding: 0.25rem;
+  border: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+  background: color-mix(in oklch, var(--background) 80%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+  border-radius: var(--radius);
+}
