@@ -11,6 +11,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public
+ENV DATABASE_URL=file:./dev.db
+ENV AUTH_SECRET=docker-build-placeholder
 RUN npm run build
 
 FROM base AS runner
