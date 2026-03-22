@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Popup, useMap, useMapEvents } from "react-leaflet";
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
 import { useGeolocation } from "@/hooks/use-geolocation";
@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import type { Event } from "@/lib/types";
 import { FlyToTargetController } from "./fly-to-target-controller";
 import { ContextMenuController } from "./context-menu";
-import { createEventMarkerLeafletIcon } from "./marker-icon";
+import { EventMapMarker } from "./event-map-marker";
 import { UserLocationMarker } from "./user-location-marker";
 
 const DEFAULT_CENTER: [number, number] = [55.75251356119127, 37.61559963226319];
@@ -233,13 +233,11 @@ export function EventMap({ events, className }: EventMapProps) {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <UserLocationMarker fallbackPosition={position} />
         {eventsWithCoords.map((event) => (
-          <Marker
+          <EventMapMarker
             key={event.id}
             position={[event.lat, event.lng]}
-            icon={createEventMarkerLeafletIcon({
-              category: event.category,
-              selected: selectedEventId === event.id,
-            })}
+            category={event.category}
+            selected={selectedEventId === event.id}
             eventHandlers={{
               click: () => setSelectedEventId(event.id, "EventMap:markerClick"),
             }}
@@ -258,7 +256,7 @@ export function EventMap({ events, className }: EventMapProps) {
                 </div>
               </Popup>
             ) : null}
-          </Marker>
+          </EventMapMarker>
         ))}
       </MapContainer>
     </div>
