@@ -1,5 +1,9 @@
 name: container-publish
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   pull_request:
     branches:
@@ -56,3 +60,38 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: docker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
+          command_timeout: 30m
+          script_stop: true
+          envs: GHCR_PULL_TOKEN,GHCR_USERNAME,IMAGE,DEPLOY_COMPOSE_PATH
+          script: |
+            set -euo pipefail
+            if [ -n "${GHCR_PULL_TOKEN:-}" ]; then
+              echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+            fi
+            COMPOSE_FILE="${DEPLOY_COMPOSE_PATH:-}"
+            if [ -z "$COMPOSE_FILE" ]; then
+              COMPOSE_FILE="/opt/local-events/docker-compose.yml"
+            fi
+            export IMAGE
+            docker compose -f "$COMPOSE_FILE" pull
+            docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+        env:
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          GHCR_USERNAME: ${{ github.repository_owner }}
+          IMAGE: ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
+          DEPLOY_COMPOSE_PATH: ${{ vars.DEPLOY_COMPOSE_PATH }}

@@ -1,0 +1,16 @@
+---
+description: Guidelines for building implementation plans
+alwaysApply: false
+---
+
+# Planning Guidelines
+
+- Verify technical feasibility of proposed libraries/approaches with the actual tech stack before committing to them.
+- One feature per plan. Label future work as out-of-scope with a brief rationale.
+- When a feature produces 3+ files, create a dedicated subfolder; don't dump into existing directories.
+- Separate display/lifecycle from behavior (e.g., controller + action pattern).
+- Colocate styles with the component (CSS Modules); do not add to globals.css unless truly global.
+- Include concrete code sketches (types, key hooks, render shape) — not just prose.
+- Every new component folder gets an AGENTS.md with architecture, extension points, and gotchas.
+- End every plan with testable acceptance criteria and a manual verification checklist.
+- Document interaction edge cases with existing components (event propagation, z-index, etc.).

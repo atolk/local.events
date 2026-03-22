@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
-import { divIcon } from "leaflet";
+import { MapContainer, TileLayer, Popup, useMap, useMapEvents } from "react-leaflet";
 import Link from "next/link";
 import "leaflet/dist/leaflet.css";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useAppStateStore } from "@/stores/app-state-store";
 import { useUserSettingsStore } from "@/stores/user-settings-store";
-import { CATEGORY_ICONS, CATEGORY_LABELS, CATEGORY_MARKER_COLORS } from "@/lib/utils/constants";
+import { CATEGORY_LABELS } from "@/lib/utils/constants";
 import { cn } from "@/lib/utils";
-import type { Event, EventCategory } from "@/lib/types";
+import type { Event } from "@/lib/types";
 import { FlyToTargetController } from "./fly-to-target-controller";
+import { ContextMenuController } from "./context-menu";
+import { EventMapMarker } from "./event-map-marker";
 import { UserLocationMarker } from "./user-location-marker";
 
 const DEFAULT_CENTER: [number, number] = [55.75251356119127, 37.61559963226319];
@@ -53,29 +53,6 @@ function stringHash(value: string) {
 function seededUnit(seed: number) {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
-}
-
-function createCategoryIcon(category: EventCategory, selected = false) {
-  const IconComponent = CATEGORY_ICONS[category];
-  const color = CATEGORY_MARKER_COLORS[category];
-  const html = renderToStaticMarkup(
-    <div
-      className={cn(
-        "flex min-w-10 items-center justify-center rounded-full bg-white shadow-md transition-all",
-        selected ? "size-12 border-4 border-primary" : "size-10 border-2 border-white"
-      )}
-      style={{ color }}
-    >
-      <IconComponent className={selected ? "size-6" : "size-5"} />
-    </div>
-  );
-  return divIcon({
-    html,
-    className: "!border-0 !bg-transparent",
-    iconSize: selected ? [48, 48] : [40, 40],
-    iconAnchor: selected ? [24, 48] : [20, 40],
-    popupAnchor: selected ? [0, -48] : [0, -40],
-  });
 }
 
 function MapCenterController({
@@ -155,17 +132,14 @@ export function EventMap({ events, className }: EventMapProps) {
       : DEFAULT_CENTER;
   const zoom = z ?? DEFAULT_ZOOM;
 
-  const handleViewportChange = useCallback(
-    (nextViewport: MapViewportBounds) => {
-      setViewport((prevViewport) => {
-        if (prevViewport && hasSameBounds(prevViewport, nextViewport)) {
-          return prevViewport;
-        }
-        return nextViewport;
-      });
-    },
-    []
-  );
+  const handleViewportChange = useCallback((nextViewport: MapViewportBounds) => {
+    setViewport((prevViewport) => {
+      if (prevViewport && hasSameBounds(prevViewport, nextViewport)) {
+        return prevViewport;
+      }
+      return nextViewport;
+    });
+  }, []);
 
   useEffect(() => {
     if (!viewport) {
@@ -179,12 +153,7 @@ export function EventMap({ events, className }: EventMapProps) {
       return [];
     }
 
-    const viewportFingerprint = [
-      viewport.south,
-      viewport.west,
-      viewport.north,
-      viewport.east,
-    ]
+    const viewportFingerprint = [viewport.south, viewport.west, viewport.north, viewport.east]
       .map((value) => value.toFixed(5))
       .join("|");
 
@@ -259,16 +228,16 @@ export function EventMap({ events, className }: EventMapProps) {
           shouldWaitForGeolocation={!hasPersistedCenter && userLocation === null && loading}
         />
         <FlyToTargetController />
+        <ContextMenuController />
         <ViewportChangeController onViewportChange={handleViewportChange} />
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <UserLocationMarker fallbackPosition={position} />
         {eventsWithCoords.map((event) => (
-          <Marker
+          <EventMapMarker
             key={event.id}
             position={[event.lat, event.lng]}
-            icon={createCategoryIcon(event.category, selectedEventId === event.id)}
+            category={event.category}
+            selected={selectedEventId === event.id}
             eventHandlers={{
               click: () => setSelectedEventId(event.id, "EventMap:markerClick"),
             }}
@@ -277,19 +246,17 @@ export function EventMap({ events, className }: EventMapProps) {
               <Popup className="event-map-mobile-popup">
                 <div className="min-w-[180px]">
                   <p className="font-semibold">{event.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {CATEGORY_LABELS[event.category]}
-                  </p>
+                  <p className="text-muted-foreground text-xs">{CATEGORY_LABELS[event.category]}</p>
                   <Link
                     href={`/events/${event.id}`}
-                    className="mt-2 inline-block text-sm text-primary underline"
+                    className="text-primary mt-2 inline-block text-sm underline"
                   >
                     Открыть детали
                   </Link>
                 </div>
               </Popup>
             ) : null}
-          </Marker>
+          </EventMapMarker>
         ))}
       </MapContainer>
     </div>
